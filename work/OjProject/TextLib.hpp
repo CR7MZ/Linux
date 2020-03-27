@@ -7,12 +7,13 @@
 #include <vector>
 #include <algorithm>
 #include "tools.hpp"
+#include "oj_log.hpp"
 
 typedef struct TextInfo
 {
     std::string _id;
     std::string _name;
-    //std::string _path;
+    std::string _path;
     std::string _star;
 }test;
 
@@ -37,6 +38,31 @@ class TextLib
                 });
         return true;
     }
+
+    bool GetOneText(const std::string& id , std::string* des,std::string* header,TextInfo* Tex)
+    {
+        auto itr = _map.find(id);
+        if(itr == _map.end())
+        {
+            LOG(ERROR,"Not Found Question :")<<id<<std::endl;
+            return false;
+        }
+
+        *Tex = itr->second;
+        int ret = FileOper::ReadDataFromFile(DescPath(itr->second._path),des);
+        if(ret == -1)
+        {
+            LOG(ERROR,"Read desc failed")<<std::endl;
+            return false;
+        }
+        ret = FileOper::ReadDataFromFile(HeaderPath(itr->second._path),header);
+        if(ret == -1)
+        {
+            LOG(ERROR,"Read header failed")<<std::endl;
+            return false;
+        }
+        return true;
+    }
     private:
     bool LoadText(const std::string& config_FilePath)
     {
@@ -52,17 +78,27 @@ class TextLib
             //分割字符串，将一个题目的每个信息分离出来
             std::vector<std::string> tmp;
             StringTool::Split(Line," ",&tmp);
-            if(tmp.size()!=3)
+            if(tmp.size()!=4)
                 continue;
             TextInfo node;
             node._id = tmp[0];
             node._name = tmp[1];
-            //node._path = tmp[2];
-            node._star = tmp[2];
+            node._path = tmp[2];
+            node._star = tmp[3];
             _map[node._id] = node;
         }
         file.close();
         return true;
+    }
+
+    std::string DescPath(const std::string& Path)
+    {
+        return Path + "desc.txt";
+    }
+
+    std::string HeaderPath(const std::string& Path)
+    {
+        return Path + "header.cpp";
     }
     private:
         std::unordered_map<std::string , TextInfo> _map;

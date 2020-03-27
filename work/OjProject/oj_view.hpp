@@ -27,5 +27,19 @@ class OJview
             //3.渲染 拿着模板类的指针，将数据字典当中的数据更新到html页面的内存中
             t1->Expand(html,&dict);
         }
+
+        static void ExpandOneQuestionsHtml(const TextInfo& Tex,std::string& dec,std::string& header,std::string* html)
+        {
+           ctemplate::TemplateDictionary dict("question");
+           dict.SetValue("id",Tex._id);
+           dict.SetValue("name",Tex._name);
+           dict.SetValue("star",Tex._star);
+           dict.SetValue("desc",dec);
+           dict.SetValue("header",header);
+
+           ctemplate::Template* tpl = ctemplate::Template::GetTemplate("./template/question.html",ctemplate::DO_NOT_STRIP);
+
+           tpl->Expand(html,&dict);
+        }
 };
 

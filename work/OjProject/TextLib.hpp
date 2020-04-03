@@ -39,6 +39,7 @@ class TextLib
         return true;
     }
 
+    //获取一个试题的详细信息
     bool GetOneText(const std::string& id , std::string* des,std::string* header,TextInfo* Tex)
     {
         auto itr = _map.find(id);
@@ -63,6 +64,28 @@ class TextLib
         }
         return true;
     }
+
+    bool SplicingCode(std::string user_code,const std::string& Que_id,std::string* Code)
+    {
+        auto itr = _map.find(Que_id);
+        if(itr == _map.end())
+        {
+            LOG(ERROR,"CAN NOT FIND QUESTION ID IS")<<Que_id<<std::endl;
+            return false;
+        }
+
+        std::string taili_code;
+        int ret = FileOper::ReadDataFromFile(TailPath(itr->second._path),&taili_code);
+       if(ret < 0)
+       {
+           LOG(ERROR,"Open tail.cpp failed");
+           return false;
+       }
+
+       *Code = user_code + taili_code;
+       return true;
+    }
+
     private:
     bool LoadText(const std::string& config_FilePath)
     {
@@ -99,6 +122,10 @@ class TextLib
     std::string HeaderPath(const std::string& Path)
     {
         return Path + "header.cpp";
+    }
+    std::string TailPath(const std::string& que_path)
+    {
+        return que_path + "tail.cpp"; 
     }
     private:
         std::unordered_map<std::string , TextInfo> _map;

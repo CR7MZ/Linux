@@ -3,10 +3,14 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <jsoncpp/json/json.h>
+
+
 #include "TextLib.hpp"
 #include "httplib.h"
 #include "oj_view.hpp"
 #include "oj_log.hpp"
+#include "compile.hpp"
 
 using namespace std;
 
@@ -44,6 +48,26 @@ int main()
                 std::string html;
                 OJview::ExpandOneQuestionsHtml(tex,desc,header,&html); 
                 resp.set_content(html,"text/html;charset=UTF-8");
+            });
+
+    //和获取用户提交的代码，进行编译运行
+    ser.Post(R"(/question/(\d+))",[&Tex](const Request& req, Response& resp){
+            std::unordered_map<string,string> pram;
+            UrlUtil::PraseBody(req.body,pram);
+
+            std::string code;
+            Tex.SplicingCode(pram["code"],req.matches[1].str(),&code);
+            Json::Value req_json;
+            req_json["code"] = code;
+            Json::Value resp_json;
+            Compiler::CompileAndRun(req_json,&resp_json);
+            
+            const std::string errorno = resp_json["errorno"].asString();
+            const std::string reason = resp_json["reason"].asString();
+            const std::string stdout_reason = resp_json["stdout"].asString();
+            std::string html;
+            OJview::ExpandReason(errorno,reason,stdout_reason,&html);
+            resp.set_content(html,"text/html;charset=UTF-8");
             });
     LOG(INFO,"listen in 0.0.0.0:19999")<<std::endl;
     LOG(INFO,"Server ready")<<std::endl;
